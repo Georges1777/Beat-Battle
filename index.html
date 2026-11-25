@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Beat Battle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Outfit:wght@400;600;800&display=swap">
+<style>
+/* Layout: one-screen arcade card, centered column, big tap targets. Single dark look by choice. */
+:root{
+  --bg:#120b24; --panel:#1d1238; --line:#3a2768; --fg:#f6f1ff; --muted:#a99cc9;
+  --hot:#ff3d7f; --cool:#29e0ff; --gold:#ffd23f; --good:#3ef08a; --bad:#ff5a5a;
+  --display:"Bungee","Impact",system-ui,sans-serif; --body:"Outfit",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}html,body{height:100%}[hidden]{display:none!important}
+body{margin:0;background:radial-gradient(ellipse at top,#2a1450 0%,var(--bg) 60%);background-color:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+.wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-size:clamp(40px,11vw,56px);line-height:.95;margin:0;text-align:center;
+  background:linear-gradient(90deg,var(--hot),var(--cool));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{text-align:center;color:var(--muted);margin:-8px 0 0;letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.hud{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted)}
+.hud b{color:var(--gold)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--hot),var(--gold));transform-origin:left}
+.clue{font-size:clamp(56px,18vw,84px);text-align:center;line-height:1.1;min-height:1.1em}
+.hint{text-align:center;color:var(--muted);margin:0}
+.opts{display:grid;gap:10px}
+button{font:inherit;cursor:pointer;border:none}
+.opt{background:#2a1b50;color:var(--fg);border:2px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;font-weight:600;font-size:17px;transition:transform .1s}
+.opt:hover{border-color:var(--cool)}
+.opt:active{transform:scale(.98)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:14px}
+.opt.ok{background:#123d29;border-color:var(--good)}
+.opt.no{background:#43171d;border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.big{font-family:var(--display);font-size:20px;padding:16px;border-radius:14px;background:linear-gradient(90deg,var(--hot),#ff7a3d);color:#fff;letter-spacing:.04em}
+.big.alt{background:transparent;border:2px solid var(--cool);color:var(--cool)}
+.big.gold{background:linear-gradient(90deg,var(--gold),#ff9f3d);color:#1a0f33}
+.feedback{text-align:center;font-weight:800;min-height:1.4em;margin:0}
+.score{font-family:var(--display);font-size:64px;text-align:center;color:var(--gold);margin:0;font-variant-numeric:tabular-nums}
+.center{text-align:center;margin:0}
+.muted{color:var(--muted)}
+ul.rules{margin:0;padding-left:20px;color:var(--muted);display:grid;gap:6px}
+.modes{display:grid;gap:10px}
+.mode{background:#2a1b50;border:2px solid var(--line);border-radius:16px;padding:16px;text-align:left;color:var(--fg)}
+.mode:hover{border-color:var(--cool)}
+.mode strong{font-family:var(--display);font-size:20px;display:block;margin-bottom:4px}
+.mode span{color:var(--muted)}
+.players{display:grid;gap:8px}
+.prow{display:flex;gap:8px}
+.prow input{flex:1;min-width:0;font:inherit;font-size:17px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:#2a1b50;color:var(--fg)}
+.prow input:focus{outline:none;border-color:var(--cool)}
+.x{background:transparent;color:var(--muted);border:2px solid var(--line);border-radius:12px;width:46px;font-size:18px}
+.small{font-weight:600;background:transparent;color:var(--cool);padding:6px;align-self:center}
+.who{font-family:var(--display);font-size:28px;text-align:center;color:var(--cool);margin:0}
+.secret{background:#0d0820;border:2px dashed var(--gold);border-radius:16px;padding:18px;text-align:center}
+.secret .t{font-family:var(--display);font-size:26px;color:var(--gold)}
+.big-timer{font-family:var(--display);font-size:72px;text-align:center;margin:0;font-variant-numeric:tabular-nums}
+.board{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.board li{display:flex;justify-content:space-between;padding:10px 14px;background:#2a1b50;border-radius:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.board li:first-child{border:2px solid var(--gold)}
+.board b{color:var(--gold)}
+.err{color:var(--bad);text-align:center;margin:0;min-height:1.2em}
+button:focus-visible,.mode:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>BEAT<br>BATTLE</h1>
+  <p class="tag">Rap FR · Saison 1</p>
+
+  <!-- MENU -->
+  <section class="card" id="menu">
+    <p class="center" style="font-size:18px;font-weight:600">Choisis ton mode 🥊</p>
+    <div class="modes">
+      <button class="mode" id="m-emoji"><strong>😎 EMOJIS</strong><span>Seul, devine le son grâce aux emojis. Bats ton record.</span></button>
+      <button class="mode" id="m-hum"><strong>🎤 FREDONNE</strong><span>Entre potes, un téléphone pour tous. Un joueur fredonne, les autres devinent.</span></button>
+    </div>
+    <p class="center muted" id="best0"></p>
+  </section>
+
+  <!-- EMOJI MODE -->
+  <section class="card" id="play" hidden>
+    <div class="hud"><span>Son <b id="num">1</b>/5</span><span>Score <b id="sc">0</b></span></div>
+    <div class="bar"><i id="timer"></i></div>
+    <div class="clue" id="clue"></div>
+    <p class="hint" id="hint"></p>
+    <div class="opts" id="opts"></div>
+    <p class="feedback" id="fb"></p>
+  </section>
+
+  <section class="card" id="end" hidden>
+    <p class="center muted">Ton score</p>
+    <p class="score" id="final">0</p>
+    <p class="center" id="verdict" style="font-weight:600"></p>
+    <p class="center muted" id="best1"></p>
+    <button class="big" id="share">COPIER MON DÉFI</button>
+    <p class="center muted" id="copied" hidden>Copié ! Colle-le dans ton groupe WhatsApp 📲</p>
+    <button class="big alt" id="again">REJOUER</button>
+    <button class="small" id="home1">← Menu</button>
+  </section>
+
+  <!-- HUM MODE: setup -->
+  <section class="card" id="h-setup" hidden>
+    <p class="center" style="font-size:18px;font-weight:600">Qui joue ? 🎤</p>
+    <ul class="rules">
+      <li>Chacun son tour, un joueur prend le téléphone et découvre le son en secret</li>
+      <li>Il le fredonne sans les paroles : 20 secondes</li>
+      <li>Le premier qui trouve gagne 2 pts, le fredonneur 1 pt</li>
+    </ul>
+    <div class="players" id="plist"></div>
+    <button class="small" id="addp">+ Ajouter un joueur</button>
+    <p class="err" id="perr"></p>
+    <button class="big" id="h-go">C'EST PARTI</button>
+    <button class="small" id="home2">← Menu</button>
+  </section>
+
+  <!-- HUM MODE: pass the phone -->
+  <section class="card" id="h-pass" hidden>
+    <div class="hud"><span>Manche <b id="h-num">1</b>/<b id="h-tot">5</b></span><span></span></div>
+    <p class="center muted">Passe le téléphone à</p>
+    <p class="who" id="h-who"></p>
+    <p class="center muted">Les autres, ne regardez pas l'écran ! 🙈</p>
+    <button class="big gold" id="h-reveal">VOIR MON SON</button>
+  </section>
+
+  <!-- HUM MODE: secret + timer -->
+  <section class="card" id="h-hum" hidden>
+    <div class="secret" id="h-secret">
+      <div class="muted">Fredonne :</div>
+      <div class="t" id="h-title"></div>
+      <div class="muted" id="h-artist"></div>
+    </div>
+    <p class="big-timer" id="h-time">20</p>
+    <button class="big" id="h-start">CACHER ET FREDONNER</button>
+    <div id="h-result" hidden>
+      <p class="center" style="font-weight:600;margin-bottom:10px">Qui a trouvé en premier ?</p>
+      <div class="opts" id="h-guessers"></div>
+    </div>
+  </section>
+
+  <!-- HUM MODE: scores -->
+  <section class="card" id="h-end" hidden>
+    <p class="center muted">Classement final</p>
+    <p class="who" id="h-winner"></p>
+    <ol class="board" id="h-board"></ol>
+    <button class="big alt" id="h-again">REJOUER</button>
+    <button class="small" id="home3">← Menu</button>
+  </section>
+</div>
+
+<script>
+const SONGS=[
+  {clue:"🏎️💨🇩🇪",hint:"Une voiture très rapide…",title:"Bolide allemand",artist:"SDM"},
+  {clue:"☁️🌤️🙏",hint:"Lève les yeux…",title:"Ciel",artist:"GIMS"},
+  {clue:"🔄👩‍🦰✨",hint:"Un mot en verlan",title:"Meuda",artist:"Tiakola"},
+  {clue:"👑🧔🏽🇪🇸",hint:"Le boss, en espagnol",title:"Jefe",artist:"Ninho"},
+  {clue:"💀🇬🇧",hint:"Un seul mot, en anglais",title:"Die",artist:"Gazo"}
+];
+const TIME=15000,HUM=20,$=id=>document.getElementById(id);
+const SCREENS=["menu","play","end","h-setup","h-pass","h-hum","h-end"];
+function show(id){SCREENS.forEach(s=>$(s).hidden=s!==id);window.scrollTo(0,0)}
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- Emoji mode ---------- */
+let order=[],i=0,score=0,t0=0,raf=0,locked=false;
+function getBest(){try{return +localStorage.getItem("bb-best")||0}catch(e){return 0}}
+function setBest(v){try{localStorage.setItem("bb-best",v)}catch(e){}}
+function showBest(){const b=getBest();const s=b?`Ton record en mode Emojis : ${b} pts`:"";$("best0").textContent=s;$("best1").textContent=b?`Ton record : ${b} pts`:""}
+
+function start(){order=shuffle(SONGS);i=0;score=0;$("sc").textContent=0;$("copied").hidden=true;show("play");next()}
+function next(){
+  if(i>=order.length)return finish();
+  locked=false;const s=order[i];
+  $("num").textContent=i+1;$("clue").textContent=s.clue;$("hint").textContent=s.hint;$("fb").textContent="";
+  const choices=shuffle([s,...shuffle(SONGS.filter(x=>x!==s)).slice(0,3)]);
+  $("opts").innerHTML="";
+  choices.forEach(c=>{const b=document.createElement("button");b.className="opt";b.dataset.t=c.title;
+    b.innerHTML=`${c.title}<small>${c.artist}</small>`;b.onclick=()=>answer(c,b);$("opts").appendChild(b)});
+  t0=performance.now();tick();
+}
+function tick(){const left=Math.max(0,1-(performance.now()-t0)/TIME);
+  $("timer").style.transform=`scaleX(${left})`;
+  if(left<=0&&!locked){answer(null,null);return}
+  if(!locked)raf=requestAnimationFrame(tick)}
+function answer(c,btn){
+  if(locked)return;locked=true;cancelAnimationFrame(raf);
+  const s=order[i],elapsed=performance.now()-t0;
+  [...$("opts").children].forEach(b=>{b.disabled=true;if(b.dataset.t===s.title)b.classList.add("ok")});
+  if(c===s){const pts=Math.max(100,Math.round(1000*(1-elapsed/TIME)));score+=pts;
+    $("fb").textContent=`🔥 +${pts} pts`;$("fb").style.color="var(--good)"}
+  else{if(btn)btn.classList.add("no");
+    $("fb").textContent=c?`Raté ! C'était ${s.title}`:`Trop lent ! C'était ${s.title}`;$("fb").style.color="var(--bad)"}
+  $("sc").textContent=score;i++;setTimeout(next,1400)
+}
+function finish(){
+  show("end");$("final").textContent=score;
+  $("verdict").textContent=score>=4000?"Légende du rap FR 👑":score>=2500?"Solide, t'as l'oreille 🎧":score>=1000?"Pas mal, encore un essai ?":"Échauffement… rejoue !";
+  if(score>getBest())setBest(score);showBest()
+}
+$("share").onclick=()=>{
+  const txt=`🥊 J'ai fait ${score} pts à Beat Battle (rap FR) ! Tu fais mieux ?`;
+  const done=()=>{$("copied").hidden=false};
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(done).catch(()=>{$("copied").textContent=txt;done()});
+  else{$("copied").textContent=txt;done()}
+};
+
+/* ---------- Hum mode ---------- */
+let players=[],pts={},hOrder=[],hRound=0,hTimer=0;
+function addRow(val){
+  const n=$("plist").children.length;if(n>=8)return;
+  const row=document.createElement("div");row.className="prow";
+  row.innerHTML=`<input id="p${Date.now()}${n}" placeholder="Joueur ${n+1}" maxlength="16" value="${esc(val||"")}"><button class="x" aria-label="Retirer">✕</button>`;
+  row.querySelector(".x").onclick=()=>{if($("plist").children.length>2)row.remove()};
+  $("plist").appendChild(row)
+}
+function setupHum(){$("plist").innerHTML="";const prev=players.length?players:["",""];prev.forEach(addRow);if(prev.length<3)addRow("");$("perr").textContent="";show("h-setup")}
+function startHum(){
+  const names=[...$("plist").querySelectorAll("input")].map(x=>x.value.trim()).filter(Boolean);
+  if(names.length<2){$("perr").textContent="Il faut au moins 2 joueurs.";return}
+  if(new Set(names).size!==names.length){$("perr").textContent="Deux joueurs ont le même prénom.";return}
+  players=names;pts={};players.forEach(p=>pts[p]=0);
+  hOrder=shuffle(SONGS);hRound=0;$("h-tot").textContent=hOrder.length;passPhone()
+}
+function hummer(){return players[hRound%players.length]}
+function passPhone(){
+  if(hRound>=hOrder.length)return endHum();
+  $("h-num").textContent=hRound+1;$("h-who").textContent=hummer();show("h-pass")
+}
+function reveal(){
+  const s=hOrder[hRound];$("h-title").textContent=s.title;$("h-artist").textContent=s.artist;
+  $("h-secret").hidden=false;$("h-time").textContent=HUM;$("h-time").style.color="var(--fg)";
+  $("h-start").hidden=false;$("h-result").hidden=true;show("h-hum")
+}
+function startHumming(){
+  $("h-secret").hidden=true;$("h-start").hidden=true;showGuessers();
+  let left=HUM;clearInterval(hTimer);
+  hTimer=setInterval(()=>{left--;$("h-time").textContent=Math.max(0,left);
+    if(left<=5)$("h-time").style.color="var(--hot)";
+    if(left<=0){clearInterval(hTimer);$("h-time").textContent="STOP !"}},1000)
+}
+function showGuessers(){
+  const box=$("h-guessers");box.innerHTML="";
+  players.filter(p=>p!==hummer()).forEach(p=>{const b=document.createElement("button");b.className="opt";b.textContent=p;b.onclick=()=>score1(p);box.appendChild(b)});
+  const none=document.createElement("button");none.className="opt";none.innerHTML="Personne 😅<small>Le son reste un mystère</small>";none.onclick=()=>score1(null);box.appendChild(none);
+  $("h-result").hidden=false
+}
+function score1(p){
+  clearInterval(hTimer);
+  if(p){pts[p]+=2;pts[hummer()]+=1}
+  $("h-secret").hidden=false;$("h-time").textContent=p?`Bravo ${p} !`:"Raté !";
+  $("h-time").style.fontSize="36px";$("h-result").hidden=true;
+  setTimeout(()=>{$("h-time").style.fontSize="";hRound++;passPhone()},1800)
+}
+function endHum(){
+  const ranked=players.slice().sort((a,b)=>pts[b]-pts[a]);
+  $("h-winner").textContent=`🏆 ${ranked[0]}`;
+  $("h-board").innerHTML=ranked.map(p=>`<li><span>${esc(p)}</span><b>${pts[p]} pts</b></li>`).join("");
+  show("h-end")
+}
+
+/* ---------- wiring ---------- */
+$("m-emoji").onclick=start;$("again").onclick=start;
+$("m-hum").onclick=setupHum;$("addp").onclick=()=>addRow("");$("h-go").onclick=startHum;
+$("h-reveal").onclick=reveal;$("h-start").onclick=startHumming;$("h-again").onclick=startHum;
+["home1","home2","home3"].forEach(id=>$(id).onclick=()=>{clearInterval(hTimer);showBest();show("menu")});
+showBest();
+</script>
+
+</body>
+</html>
